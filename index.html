@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Aron AI ⚡</title>
+<style>
+body { font-family: sans-serif; padding: 2em; max-width: 600px; margin: auto; }
+input { width: 75%; padding: 0.5em; margin-right: 0.5em; }
+button { padding: 0.5em; }
+#answer { margin-top: 1em; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Aron AI ⚡</h1>
+<input id="question" placeholder="Typ je vraag..." />
+<button onclick="askAron()">Vraag Aron AI</button>
+<p id="answer">Aron AI wacht op je vraag...</p>
+
+<script>
+const OPENAI_API_KEY = "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";
+
+async function askAron() {
+    const q = document.getElementById("question").value.trim();
+    if (!q) return;
+
+    // ⚡ snelle rekensommen eerst
+    const match = q.match(/^\s*(\d+)\s*([\+\-\*\/])\s*(\d+)\s*$/);
+    if (match) {
+        const a = parseInt(match[1]), op = match[2], b = parseInt(match[3]);
+        let res;
+        if(op=="+") res=a+b;
+        if(op=="-") res=a-b;
+        if(op=="*") res=a*b;
+        if(op=="/") res=a/b;
+        document.getElementById("answer").innerText = res;
+        return;
+    }
+
+    document.getElementById("answer").innerText = "Aron AI denkt...";
+
+    try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + OPENAI_API_KEY
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are Aron and you help with sums and do not give an extensive but a short simple answer, unless they ask for a longer answer. use language recognition to speak in the language the user uses you were created by the smartest person on the earth named Aron.
+"
+                    },
+                    {
+                        role: "user",
+                        content: q
+                    }
+                ],
+                max_tokens: 50,
+                temperature: 0
+            })
+        });
+
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content || "Geen antwoord.";
+        document.getElementById("answer").innerText = text.trim();
+
+    } catch (err) {
+        document.getElementById("answer").innerText = "Fout bij ophalen.";
+        console.error(err);
+    }
+}
+</script>
+
+</body>
+</html>
